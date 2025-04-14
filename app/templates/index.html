@@ -4,23 +4,47 @@
     <!-- sets the tab name in your browser -->
     <!-- loads Chart.js, a JavaScript library for making charts -->
   <title>F1 Visualizer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>Wins by Driver</h1>
-  <canvas id="winsChart" width="400" height="200"></canvas>
+
+  <!-- Year Dropdown -->
+  <label for="seasonSelect">Select a Season:</label>
+  <select id="seasonSelect">
+    <option value="2023" selected>2023</option>
+    <option value="2022">2022</option>
+    <option value="2021">2021</option>
+    <option value="2020">2020</option>
+  </select>
+  <div id="chart-container">
+    <canvas id="winsChart" width="400" height="200"></canvas>
+  </div>
 
   <script>
-    // This starts a JavaScript fetch request to your Flask backend:
-    fetch('/api/wins-by-driver')
+    let chart; // global so we can update it later
 
-    // This takes the response and parses it into JSON format
-    // res.json() turns the raw HTTP response into usable JavaScript data
+    function loadChart(season) {
+      console.log("Fetching data for season:", season);
+
+      // This starts a JavaScript fetch request to your Flask backend:
+      fetch(`/api/wins-by-driver?season=${season}`)
+      
+      // This takes the response and parses it into JSON format
+      // res.json() turns the raw HTTP response into usable JavaScript data
       .then(res => res.json())
       .then(data => {
         // Extracts labels and values from the JSON
         const labels = Object.keys(data);
         const values = Object.values(data);
+
+        // destroy previous chart if it exist
+        const existingChart = Chart.getChart("winsChart");
+        if (existingChart) {
+          existingChart.destroy();
+        }
+
 
         // new Chart(...) creates a bar chart in the <canvas> with ID winsChart
         // labels: driver names on the X-axis
@@ -32,11 +56,33 @@
             labels: labels,
             datasets: [{
               label: 'Wins',
-              data: values
+              data: values,
+              backgroundColor: 'rgba(255, 99, 132, 0.7)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
             }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
           }
         });
       });
+    }
+
+    // Load default chart on page load
+    loadChart("2023");
+
+    // Update chart when dropdown changes
+    document.getElementById('seasonSelect').addEventListener('change', (e) => {
+      loadChart(e.target.value);
+    });
   </script>
 </body>
 </html>
