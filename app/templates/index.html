@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- sets the tab name in your browser -->
+    <!-- loads Chart.js, a JavaScript library for making charts -->
+  <title>F1 Visualizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Wins by Driver</h1>
+  <canvas id="winsChart" width="400" height="200"></canvas>
+
+  <script>
+    // This starts a JavaScript fetch request to your Flask backend:
+    fetch('/api/wins-by-driver')
+
+    // This takes the response and parses it into JSON format
+    // res.json() turns the raw HTTP response into usable JavaScript data
+      .then(res => res.json())
+      .then(data => {
+        // Extracts labels and values from the JSON
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+
+        // new Chart(...) creates a bar chart in the <canvas> with ID winsChart
+        // labels: driver names on the X-axis
+        // data: number of wins for each driver (Y-axis)
+        // label: 'Wins' appears as a chart legend
+        new Chart(document.getElementById('winsChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Wins',
+              data: values
+            }]
+          }
+        });
+      });
+  </script>
+</body>
+</html>
