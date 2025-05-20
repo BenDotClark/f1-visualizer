@@ -8,9 +8,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>Wins by Driver</h1>
+  <h1>F1 Visualizer</h1>
 
-  <!-- Year Dropdown -->
+  <!-- Dropdown to choose chart type (driver, constructor, pole, fastest lap) -->
+  <label for="chartTypeSelect">Select Data Type:</label>
+  <select id="chartTypeSelect">
+    <option value="driver">Driver Wins</option>
+    <option value="constructor">Constructor Wins</option>
+    <option value="pole">Pole Positions</option>
+    <option value="fastest">Fastest Laps</option>
+  </select>
+
+  <!-- Dropdown to choose the F1 season -->
   <label for="seasonSelect">Select a Season:</label>
   <select id="seasonSelect">
     <option value="2023" selected>2023</option>
@@ -18,70 +27,77 @@
     <option value="2021">2021</option>
     <option value="2020">2020</option>
   </select>
+
+  <!-- Container to hold the chart -->
   <div id="chart-container">
     <canvas id="winsChart" width="400" height="200"></canvas>
   </div>
 
   <script>
-    let chart; // global so we can update it later
+    let chart; // Store reference to the current chart
 
-    function loadChart(season) {
-      console.log("Fetching data for season:", season);
+    // Function to load and render the chart based on season and chart type
+    function loadChart(season, chartType = "driver") {
+      console.log("Loading chart for:", chartType, season);
 
-      // This starts a JavaScript fetch request to your Flask backend:
-      fetch(`/api/wins-by-driver?season=${season}`)
-      
-      // This takes the response and parses it into JSON format
-      // res.json() turns the raw HTTP response into usable JavaScript data
-      .then(res => res.json())
-      .then(data => {
-        // Extracts labels and values from the JSON
-        const labels = Object.keys(data);
-        const values = Object.values(data);
+      // Decide which backend API route to call based on selected chart type
+      let endpoint = "wins-by-driver";
+      if (chartType === "constructor") endpoint = "constructor-standings";
+      if (chartType === "pole") endpoint = "pole-positions";
+      if (chartType === "fastest") endpoint = "fastest-laps";
 
-        // destroy previous chart if it exist
-        const existingChart = Chart.getChart("winsChart");
-        if (existingChart) {
-          existingChart.destroy();
-        }
+      // Fetch data from Flask backend route (which proxies the Jolpica API)
+      fetch(`/api/${endpoint}?season=${season}`)
+        .then(res => res.json())
+        .then(data => {
+          // Extract driver/team names and corresponding values from JSON
+          const labels = Object.keys(data);
+          const values = Object.values(data);
 
+          // Destroy the existing chart if one already exists (to avoid duplicate canvas rendering errors)
+          const existingChart = Chart.getChart("winsChart");
+          if (existingChart) existingChart.destroy();
 
-        // new Chart(...) creates a bar chart in the <canvas> with ID winsChart
-        // labels: driver names on the X-axis
-        // data: number of wins for each driver (Y-axis)
-        // label: 'Wins' appears as a chart legend
-        new Chart(document.getElementById('winsChart'), {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Wins',
-              data: values,
-              backgroundColor: 'rgba(255, 99, 132, 0.7)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  stepSize: 1
+        // Create new Chart.js bar chart with fetched data
+        chart = new Chart(document.getElementById("winsChart"), {
+            type: "bar",
+            data: {
+              labels: labels,
+              datasets: [{
+                label: `${chartType.charAt(0).toUpperCase() + chartType.slice(1)} (${season})`,
+                data: values,
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 1 }
                 }
               }
             }
-          }
+          });
         });
-      });
     }
 
-    // Load default chart on page load
-    loadChart("2023");
+    // Load default chart (Driver Wins for 2023) on page load
+    loadChart("2023", "driver");
 
-    // Update chart when dropdown changes
-    document.getElementById('seasonSelect').addEventListener('change', (e) => {
-      loadChart(e.target.value);
+    // Reload chart when user changes the season
+    document.getElementById("seasonSelect").addEventListener("change", () => {
+      const season = document.getElementById("seasonSelect").value;
+      const type = document.getElementById("chartTypeSelect").value;
+      loadChart(season, type);
+    });
+
+    // Reload chart when user changes the data type (driver, constructor, etc.)
+    document.getElementById("chartTypeSelect").addEventListener("change", () => {
+      const season = document.getElementById("seasonSelect").value;
+      const type = document.getElementById("chartTypeSelect").value;
+      loadChart(season, type);
     });
   </script>
 </body>
