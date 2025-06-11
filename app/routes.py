@@ -6,6 +6,7 @@ import requests
 # jsonify – converts Python data (like a dictionary) into JSON format, for use in APIs.
 # request – gives you access to data that came with the user's request — like form inputs, headers, and URL parameters.
 from flask import Flask, render_template, jsonify, request
+from datetime import datetime
 
 
 # This creates an instance of your Flask app and stores it in the variable app.
@@ -40,6 +41,8 @@ def index():
 # Convert this Python dictionary into JSON, which is readable by browsers and JavaScript.
 
 # The frontend JavaScript (like Chart.js) will fetch this API and turn it into a chart!
+
+
 # -------------------------
 # API: Driver Wins (Default Chart)
 # -------------------------
@@ -140,3 +143,159 @@ def fastest_laps():
         return jsonify(lap_counts)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# =========================
+# API: Latest Race Results (for race table)
+# =========================
+@app.route("/api/latest-results")
+def latest_results():
+    try:
+        # Get the latest race results from Jolpica API
+        url = "http://api.jolpi.ca/ergast/f1/current/last/results.json"
+        response = requests.get(url)
+        data = response.json()
+
+        # Drill into the first race results returned
+        race = data['MRData']['RaceTable']['Races'][0]
+        race_name = race["raceName"]
+        results = race['Results']
+
+        formatted_results = []
+        for r in results:
+            driver = r['Driver']
+            constructor = r['Constructor']
+            formatted_results.append({
+                "position": r['position'],
+                "driver": f"{driver['givenName']} {driver['familyName']}",
+                "code": driver.get("code", driver['familyName'][:3].upper()),
+                "constructor": constructor['name'],
+                "time": r.get('Time', {}).get('time', r.get('status', 'N/A')),
+            })
+
+        return jsonify({
+        "grandPrix": race_name,
+        "results": formatted_results
+    })
+    
+    except Exception as e:
+        return jsonify({"error": "Could not load latest results", "details": str(e)}), 500
+    
+# ===========================
+# API: Driver Spotlight 
+# ===========================
+@app.route("/api/driver-spotlight")
+def driver_spotlight():
+    """
+    Fetch enriched driver data for the current season's standings,
+    combining standings info with profile data (age, nationality).
+    """
+    season = request.args.get("season", str(datetime.now().year))
+
+    try:
+        ERGAST_BASE_URL = "https://api.jolpi.ca/ergast/f1"
+
+        # Correct URL spelling
+        standings_url = f"{ERGAST_BASE_URL}/{season}/driverStandings.json"
+        standings_response = requests.get(standings_url)
+        standings_data = standings_response.json()
+
+        standings = standings_data["MRData"]["StandingsTable"]["StandingsLists"][0]["DriverStandings"][:3]
+
+        # Fix profile endpoint spelling and key path
+        profiles_url = f"{ERGAST_BASE_URL}/drivers.json?limit=1000"
+        profiles_response = requests.get(profiles_url)
+        profiles_data = profiles_response.json()
+
+        all_profiles = profiles_data["MRData"]["DriverTable"]["Drivers"]
+        profile_lookup = {driver["driverId"]: driver for driver in all_profiles}
+
+        enriched_data = []
+        for entry in standings:
+            driver = entry["Driver"]
+            driver_id = driver["driverId"]
+
+            # Try fast lookup
+            profile = profile_lookup.get(driver_id)
+
+            # Fallback fetch if not found
+            if not profile:
+                print(f"🔁 Fallback fetch for missing profile: {driver_id}")
+                fallback_url = f"{ERGAST_BASE_URL}/drivers/{driver_id}.json"
+                fallback_response = requests.get(fallback_url).json()
+                drivers_list = fallback_response["MRData"]["DriverTable"]["Drivers"]
+                profile = drivers_list[0] if drivers_list else {}
+
+            nationality = profile.get("nationality", "N/A")
+            dob = profile.get("dateOfBirth", None)
+            age = calculate_age(dob) if dob else "?"
+
+            print(f"✅ Loaded profile for {driver_id}: {nationality} | {dob}")
+
+            enriched_data.append({
+                "name": f"{driver['givenName']} {driver['familyName']}",
+                "constructor": entry["Constructors"][0]["name"],
+                "points": entry["points"],
+                "nationality": nationality,
+                "age": age,
+                "driverID": driver_id
+            })
+
+        return jsonify(enriched_data)
+
+    except Exception as e:
+        return jsonify({"error": "Could not load driver spotlight", "details": str(e)}), 500
+    
+@app.route("/api/constructor-spotlight")
+def constructor_spotlight():
+    season = request.args.get("season", str(datetime.now().year))
+    try:
+        response = requests.get(f"https://api.jolpi.ca/ergast/f1/{season}/constructorStandings.json")
+        data = response.json()
+
+        standings = data["MRData"]["StandingsTable"]["StandingsLists"][0]["ConstructorStandings"]
+
+        top3 = standings[:3]
+        spotlight_data = []
+
+        for team in top3:
+            constructor = team["Constructor"]
+            name = constructor["name"]
+            spotlight_data.append({
+                "name": name,
+                "points": team["points"],
+                "wins": team["wins"],
+                "logo": team_logo_file(name)
+            })
+
+        return jsonify(spotlight_data)
+
+    except Exception as e:
+        return jsonify({"error": "Could not load constructor spotlight", "details": str(e)}), 500
+
+
+# -------------------------
+# Utility: Calculate Age
+# -------------------------
+def calculate_age(dob_string):
+    birth_date = datetime.strptime(dob_string, "%Y-%m-%d")
+    today = datetime.today()
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+def team_logo_file(name):
+    """
+    Maps constructor names to their logo filenames.
+    Match this to your static/img/teams/ folder.
+    """
+    logo_map = {
+        "Red Bull": "red-bull-racing-logo.png",
+        "McLaren": "mclaren-logo.png",
+        "Ferrari": "ferrari-logo.png",
+        "Mercedes": "mercedes-logo.png",
+        "Aston Martin": "aston-martin-logo.png",
+        "Williams": "williams-logo.png",
+        "Haas F1 Team": "haas-logo.png",
+        "Alpine F1 Team": "alpine-logo.png",
+        "Sauber": "kick-sauber-logo.png",
+        "RB F1 Team": "racing-bulls-logo.png"
+    }
+    return logo_map.get(name, "default.png")

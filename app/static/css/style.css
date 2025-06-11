@@ -1,26 +1,368 @@
 /* app/static/css/style.css */
 
+/*
+===================================
+ F1 TrackSide - Stylesheet
+=================================== 
+*/
+
+/* ---------- Color Variables ---------- */
+:root {
+  --f1-red: #FF1E00;
+  --f1-black: #15151E;
+  --f1-light-bg: #f7f7f7;
+  --f1-gray: #eaeaea;
+}
+
+div { 
+  outline: 1px solid red !important; 
+}
+
+section {
+  outline: 1px solid blue !important;
+}
+
+/* ---------- Fonts ---------- */
+@font-face {
+  font-family: 'Formula1';
+  src: url('../fonts/Formula1-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Formula1-Bold';
+  src: url('../fonts/Formula1-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* ---------- Base Styling ---------- */
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f7f7f7;
-    color: #222;
-    margin: 0;
-    padding: 0;
-    text-align: center;
+  font-family: 'Formula1', sans-serif;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+h1, h2, h3, h4, .fw-bold {
+  font-family: 'Formula1', sans-serif;
+  font-weight: bold;
+}
+
+.card-header,
+.carousel-item h4 {
+  font-family: 'Formula1Wide', sans-serif;
+}
+
+/*
+===================================
+        Navbar Styling
+===================================
+*/
+
+.navbar {
+  background-color: var(--f1-red) !important;
+  color: white;
+}
+
+.navbar .navbar-toggler {
+  border: none;
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='white' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Ensure center alignment for logo + title block */
+.navbar .mx-auto {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Responsive button spacing */
+.navbar .btn {
+  white-space: nowrap;
+}
+
+/* Optional hover highlight for white buttons */
+.navbar .btn:hover {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: var(--f1-red);
+}
+
+.offcanvas-body a:hover {
+  text-decoration: underline;
+  color: var(--f1-red);
+}
+
+
+/* ============================
+   Spotlight Section Styling
+=============================== */
+
+.spotlight-section {
+  margin-bottom: 2rem;
+}
+
+.spotlight-section .btn {
+  font-family: 'Formula1-Bold', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.spotlight-section .btn.active {
+  background-color: var(--f1-black);
+  color: white;
+}
+
+#spotlightContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* ============================
+   Spotlight Card Base Style
+=============================== */
+
+.driver-card {
+  background: #fff;
+  border-radius: 12px;
+  width: 220px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  position: relative;
+  text-align: center;
+  font-family: 'Formula1', sans-serif;
+}
+
+.driver-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.driver-card .rank {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--f1-red);
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.driver-card .driver-img {
+  /* width: 100%;
+  height: 130px;
+  object-fit: cover; */
+  object-fit: contain;
+  padding: 0.5rem;
+  background-color: white;
+  max-height: 130px;
+}
+
+.driver-card .info {
+  padding: 0.75rem;
+}
+
+.driver-card .driver-code {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.driver-card .points {
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.driver-card .team {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.driver-card .team-logo {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  height: 28px;
+  opacity: 0.9;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .driver-card {
+    width: 100%;
+    max-width: 300px;
   }
-  
-  h1 {
-    margin-top: 40px;
-    font-size: 2.5rem;
+
+  .spotlight-section .d-flex {
+    flex-direction: column;
+    align-items: center;
   }
-  
-  #chart-container {
-    width: 80%;
-    max-width: 800px;
-    margin: 40px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  .spotlight-section .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
   }
-  
+}
+
+/*
+===================================
+   Race Table Layout & Styling
+===================================
+*/
+
+.grand-prix-title {
+  display: table-cell;
+  width: auto;
+  box-sizing: border-box;
+  background-color: #15151E;
+  font-family: 'Formula1-Bold', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1rem;
+  color: white;
+  text-align: left;
+  border-bottom: 1px solid #2c2c2e;
+}
+
+/* Wrapper to constrain table width and add rounded corners */
+.race-table-wrapper {
+  background-color: #15151E;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin: 2rem auto;
+}
+
+/* Base table styling */
+#raceResultsTable {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Header cell styles */
+#raceResultsTable thead th {
+  background-color: #15151E;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  color: #fff;
+  padding: 0.75rem;
+  border-bottom: 1px solid #2c2c2e;
+}
+
+/* Table cell styling */
+#raceResultsTable tbody td {
+  padding: 0.75rem 0.5rem;
+  line-height: 1.3;
+  vertical-align: middle;
+  color: #fff;
+}
+
+#raceResultsTable td.time-cell {
+  font-size: 0.8rem; /* or try 0.85rem if you need it smaller */
+}
+
+/* Driver cell styling - horizontally aligned driver code + constructor */
+#raceResultsTable td.driver-cell {
+  padding: 0.5rem 0.75rem;
+}
+
+.driver-name-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Adjust logo icon */
+#raceResultsTable .logo-icon {
+  display: inline-block;
+  height: 16px;
+  width: auto;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.logo-icon {
+  height: 18px;
+  width: auto;
+  margin-right: 6px;
+}
+
+/* Constructor name formatting */
+.constructor-name {
+  font-size: 0.75rem;
+  color: #bbb;
+  margin-left: 6px;
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+/* Column widths */
+#raceResultsTable th:nth-child(1),
+#raceResultsTable td:nth-child(1) {
+  width: 8%;
+  text-align: center;
+}
+
+#raceResultsTable th:nth-child(2),
+#raceResultsTable td:nth-child(2) {
+  width: 62%;
+  text-align: left;
+}
+
+#raceResultsTable th:nth-child(3),
+#raceResultsTable td:nth-child(3) {
+  width: 30%;
+  text-align: center;
+  padding-right: 1rem;
+}
+
+/* Status styles */
+.result-dnf {
+  color: #aaa;
+  font-style: italic;
+}
+
+.result-lap {
+  color: #999;
+}
+
+/* Row hover */
+#raceResultsTable tbody tr:hover {
+  background-color: #252533;
+}
+
+/* Dark background enforcement */
+#raceResultsTable thead,
+#raceResultsTable tbody,
+#raceResultsTable tr,
+#raceResultsTable td {
+  background-color: #15151E !important;
+}
+
+#raceResultsTable thead th,
+#raceResultsTable tbody td {
+  vertical-align: middle;
+}
+
+/* Hide constructor name on small screens */
+@media (max-width: 768px) {
+  .constructor-name {
+    visibility: hidden;
+    height: 0;
+    display: inline-block;
+  }
+}
